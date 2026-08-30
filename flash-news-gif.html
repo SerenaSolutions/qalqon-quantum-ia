@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QALQON - Flash News GIF Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0e1a;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            display: block;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: 2px solid #0a66c2;
+            color: #fff;
+            font-size: 14px;
+            z-index: 1000;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        button {
+            background: #0a66c2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        
+        button:hover {
+            background: #004182;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="controls">
+        <span id="status">Gerando animação...</span>
+        <button onclick="downloadGif()">⬇️ Download GIF</button>
+        <button onclick="downloadMP4()">⬇️ Download MP4</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        
+        // Dimensões otimizadas para redes sociais
+        canvas.width = 1200;
+        canvas.height = 630;
+        
+        let gifFrames = [];
+        let mp4Frames = [];
+        
+        const colors = {
+            bg: '#050712',
+            accent1: '#0a66c2',
+            accent2: '#89a0ff',
+            accent3: '#67dfa2',
+            accent4: '#69e5d8',
+            text: '#eef3ff',
+            danger: '#ff6b6b'
+        };
+        
+        function drawFlashNewsFrame(frameNum, totalFrames) {
+            // Limpar canvas
+            ctx.fillStyle = colors.bg;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Efeitos de fundo dinâmicos
+            const gradient = ctx.createRadialGradient(600, 315, 0, 600, 315, 800);
+            gradient.addColorStop(0, '#263b8440');
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Linhas de varredura de TV (efeito vintage)
+            if (frameNum % 3 === 0) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+                ctx.lineWidth = 2;
+                for (let y = 0; y < canvas.height; y += 4) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+            }
+            
+            // BANNER SUPERIOR - BREAKING NEWS
+            const bannerHeight = 60;
+            const bannerProgress = Math.min(frameNum / 15, 1); // Slide-in
+            const bannerX = -canvas.width + (bannerProgress * canvas.width);
+            
+            ctx.fillStyle = colors.danger;
+            ctx.fillRect(bannerX, 20, canvas.width, bannerHeight);
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 28px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚠️ BREAKING NEWS ⚠️', bannerX + canvas.width / 2, 57);
+            
+            // Pulsação do banner
+            const pulse = Math.sin(frameNum * 0.3) * 3 + 3;
+            ctx.strokeStyle = colors.danger;
+            ctx.lineWidth = pulse;
+            ctx.strokeRect(bannerX, 20, canvas.width, bannerHeight);
+            
+            // TÍTULO PRINCIPAL com efeito typewriter + glow
+            ctx.fillStyle = colors.text;
+            ctx.font = 'bold 72px Arial';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = colors.accent2;
+            ctx.shadowBlur = 20 + Math.sin(frameNum * 0.15) * 10;
+            
+            const titleText = 'A PRÓXIMA INTERNET';
+            const titleY = 200;
+            
+            // Efeito typewriter
+            const typeProgress = Math.min((frameNum - 20) / 30, 1);
+            const charsToShow = Math.floor(titleText.length * typeProgress);
+            ctx.fillText(titleText.substring(0, charsToShow), 600, titleY);
+            
+            // SUBTÍTULO COM GRADIENT
+            ctx.shadowBlur = 0;
+            ctx.font = 'bold 64px Arial';
+            const gradient2 = ctx.createLinearGradient(100, 280, 1100, 280);
+            gradient2.addColorStop(0, colors.accent4);
+            gradient2.addColorStop(0.5, colors.accent3);
+            gradient2.addColorStop(1, colors.accent2);
+            ctx.fillStyle = gradient2;
+            ctx.fillText('É MAIS FÍSICA', 600, 310);
+            
+            // ÍCONE QUÂNTICO animado
+            const iconSize = 80 + Math.sin(frameNum * 0.2) * 20;
+            const iconX = 150;
+            const iconY = 310;
+            
+            ctx.strokeStyle = colors.accent2;
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.8 + Math.sin(frameNum * 0.15) * 0.2;
+            
+            // Desenhar símbolo quântico
+            ctx.beginPath();
+            ctx.arc(iconX, iconY, iconSize/2, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(iconX, iconY, iconSize/3, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Rotação
+            ctx.save();
+            ctx.translate(iconX, iconY);
+            ctx.rotate(frameNum * 0.05);
+            ctx.strokeStyle = colors.accent3;
+            for (let i = 0; i < 6; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos((i / 6) * Math.PI * 2) * (iconSize/2), 
+                          Math.sin((i / 6) * Math.PI * 2) * (iconSize/2));
+                ctx.stroke();
+            }
+            ctx.restore();
+            ctx.globalAlpha = 1;
+            
+            // ESTATÍSTICAS ANIMADAS
+            ctx.font = 'bold 36px Arial';
+            ctx.textAlign = 'left';
+            
+            const stats = [
+                { label: '700+', desc: 'Fibras Quânticas', x: 950 },
+                { label: '∞', desc: 'IA × Quântico', x: 950 },
+                { label: '2026', desc: 'Tendência', x: 950 }
+            ];
+            
+            stats.forEach((stat, idx) => {
+                const yPos = 380 + (idx * 80);
+                const statProgress = Math.max(0, (frameNum - 50 - idx * 10) / 20);
+                const opacity = Math.min(statProgress, 1);
+                
+                ctx.globalAlpha = opacity;
+                ctx.fillStyle = colors.accent2;
+                ctx.fillText(stat.label, stat.x, yPos);
+                
+                ctx.font = '14px Arial';
+                ctx.fillStyle = colors.accent4;
+                ctx.fillText(stat.desc, stat.x, yPos + 25);
+                ctx.font = 'bold 36px Arial';
+                ctx.globalAlpha = 1;
+            });
+            
+            // LOGO QALQON
+            ctx.fillStyle = colors.accent2;
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'left';
+            ctx.globalAlpha = 0.7;
+            ctx.fillText('◈ QALQON', 30, 600);
+            ctx.fillText('QUANTUM INTELLIGENCE 2026', 30, 625);
+            ctx.globalAlpha = 1;
+            
+            // EFEITO DE FLASH/RELÂMPAGO aleatório
+            if (frameNum % 25 === 0 && frameNum > 50) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.3 * Math.random()})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // PARTÍCULAS de movimento
+            ctx.globalAlpha = 0.3;
+            for (let i = 0; i < 5; i++) {
+                const x = (frameNum * 5 + i * 100) % canvas.width;
+                const y = 100 + Math.sin(frameNum * 0.1 + i) * 50;
+                ctx.fillStyle = colors.accent3;
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+        
+        // Gerar frames da animação
+        function generateFrames() {
+            const totalFrames = 120;
+            status.textContent = `Gerando frames: 0/${totalFrames}`;
+            
+            for (let i = 0; i < totalFrames; i++) {
+                drawFlashNewsFrame(i, totalFrames);
+                gifFrames.push(canvas.toDataURL('image/png'));
+                mp4Frames.push(canvas.toDataURL('image/png'));
+                
+                if (i % 20 === 0) {
+                    status.textContent = `Gerando frames: ${i}/${totalFrames}`;
+                }
+            }
+            
+            status.textContent = '✅ Animação pronta! Baixe em GIF ou MP4';
+        }
+        
+        async function downloadGif() {
+            status.textContent = '⏳ Convertendo para GIF...';
+            
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
+                width: 1200,
+                height: 630
+            });
+            
+            gifFrames.forEach((frameData, idx) => {
+                const img = new Image();
+                img.onload = () => gif.render();
+                img.src = frameData;
+                gif.addFrame(img, { delay: 33 }); // ~30fps
+            });
+            
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'qalqon-breaking-news.gif';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                status.textContent = '✅ GIF baixado com sucesso!';
+            });
+            
+            gif.render();
+        }
+        
+        function downloadMP4() {
+            status.textContent = '⏳ Convertendo para MP4... (use ffmpeg para melhor qualidade)';
+            alert('Para criar MP4, use:\nffmpeg -framerate 30 -i frame_%d.png -c:v libx264 qalqon.mp4\n\nOu use um serviço online de conversão!');
+        }
+        
+        // Iniciar animação
+        window.addEventListener('load', generateFrames);
+    </script>
+</body>
+</html>
